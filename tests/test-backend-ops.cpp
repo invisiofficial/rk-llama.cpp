@@ -7991,6 +7991,39 @@ static std::vector<std::unique_ptr<test_case>> make_test_cases_eval() {
         }
     }
 
+    // F8.3 / TST.1 — sanity coverage for the production W8A8 path (Q8_0 weights).
+    // n_align=32 for W8A8, k_align=32; pick shapes that satisfy both. Without
+    // these, no Q8_0 mul_mat is exercised by test-backend-ops on RKNPU.
+    for (int m_q : {32, 256, 512}) {
+        for (int n_q : {1, 16, 64}) {
+            for (int k_q : {256, 512}) {
+                test_cases.emplace_back(new test_mul_mat(
+                    GGML_TYPE_Q8_0, GGML_TYPE_F32,
+                    /*m=*/m_q, /*n=*/n_q, /*k=*/k_q,
+                    /*bs=*/{1, 1}, /*nr=*/{1, 1}));
+            }
+        }
+    }
+
+    // F8.3 / TST.1 — synthetic GQA-style batched mul_mat coverage.
+    // src0 = F16 [head_dim, kv_len, 1, 1]   (rank-2 K cache view)
+    // src1 = F32 [head_dim, q_len, n_head_q, 1]
+    // dst  = F32 [kv_len,   q_len, n_head_q, 1]
+    // Maps to test_mul_mat(F16, F32, m=kv_len, n=q_len, k=head_dim, bs={1,1}, nr={n_head_q,1}).
+    // Matches the shapes captured by F8.0 diagnostic on gemma-4-E2B (n_head_q=8).
+    for (int n_heads : {1, 8}) {
+        for (int t_q : {1, 16, 64, 256}) {
+            for (auto kn : std::vector<std::pair<int,int>>{ {256,256}, {256,512}, {512,256}, {512,512} }) {
+                int k = kn.first;
+                int n = kn.second;
+                test_cases.emplace_back(new test_mul_mat(
+                    GGML_TYPE_F16, GGML_TYPE_F32,
+                    /*m=*/n, /*n=*/t_q, /*k=*/k,
+                    /*bs=*/{1, 1}, /*nr=*/{n_heads, 1}));
+            }
+        }
+    }
+
 #if 0
     {
         // Test paths in OpenCL

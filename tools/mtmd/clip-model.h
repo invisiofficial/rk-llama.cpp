@@ -79,7 +79,6 @@ struct clip_hparams {
 
     float eps = 1e-6;
     float rope_theta = 0.0;
-
     std::unordered_set<int32_t> vision_feature_layer;
     int32_t attn_window_size = 0;
     int32_t n_wa_pattern = 0;
@@ -218,6 +217,13 @@ struct clip_layer {
     ggml_tensor * conv_pw2_w    = nullptr;
     ggml_tensor * conv_pw2_b    = nullptr;
 
+    // gemma4 audio conformer per-layer
+    ggml_tensor * attn_pre_norm_w   = nullptr;
+    ggml_tensor * attn_k_rel_w      = nullptr;
+    ggml_tensor * per_dim_scale_w   = nullptr;
+    ggml_tensor * per_dim_k_scale_w = nullptr;
+    ggml_tensor * ff_post_norm_1_w  = nullptr;
+
     bool has_deepstack() const {
         return deepstack_fc1_w != nullptr;
     }
@@ -260,6 +266,27 @@ struct mobilenetv5_block {
 
     // Block norm (often present in attention blocks)
     ggml_tensor * attn_norm_w   = nullptr;
+};
+
+struct yasa2_block {
+    ggml_tensor * dw_w  = nullptr;
+    ggml_tensor * dw_b  = nullptr;
+    ggml_tensor * ln_w  = nullptr;
+    ggml_tensor * ln_b  = nullptr;
+    ggml_tensor * pw1_w = nullptr;
+    ggml_tensor * pw1_b = nullptr;
+    ggml_tensor * grn_w = nullptr;
+    ggml_tensor * grn_b = nullptr;
+    ggml_tensor * pw2_w = nullptr;
+    ggml_tensor * pw2_b = nullptr;
+};
+
+struct yasa2_stage {
+    ggml_tensor * down_ln_w   = nullptr;
+    ggml_tensor * down_ln_b   = nullptr;
+    ggml_tensor * down_conv_w = nullptr;
+    ggml_tensor * down_conv_b = nullptr;
+    std::vector<yasa2_block> blocks;
 };
 
 struct clip_model {
@@ -358,7 +385,8 @@ struct clip_model {
     // MINICPMV projection
     ggml_tensor * mm_model_pos_embed_k = nullptr;
     ggml_tensor * mm_model_query = nullptr;
-    ggml_tensor * mm_model_proj = nullptr;
+    ggml_tensor * mm_model_proj   = nullptr;
+    ggml_tensor * mm_model_proj_b = nullptr;
     ggml_tensor * mm_model_kv_proj = nullptr;
     ggml_tensor * mm_model_attn_q_w = nullptr;
     ggml_tensor * mm_model_attn_q_b = nullptr;
@@ -395,6 +423,15 @@ struct clip_model {
     ggml_tensor * msfa_ffn_expand_bn = nullptr;
     ggml_tensor * msfa_ffn_project_bn = nullptr;
 
+    // yasa2
+    ggml_tensor * yasa_patch_w = nullptr;
+    ggml_tensor * yasa_patch_b = nullptr;
+    ggml_tensor * yasa_patch_ln_w = nullptr;
+    ggml_tensor * yasa_patch_ln_b = nullptr;
+    ggml_tensor * yasa_backbone_ln_w = nullptr;
+    ggml_tensor * yasa_backbone_ln_b = nullptr;
+    ggml_tensor * yasa_vision_pos_embed = nullptr;
+    std::vector<yasa2_stage> yasa_stages;
 
     // pixtral, glm4v
     ggml_tensor * token_embd_img_break = nullptr;
@@ -406,9 +443,19 @@ struct clip_model {
     ggml_tensor * conv1d_1_b = nullptr;
     ggml_tensor * conv1d_2_w = nullptr;
     ggml_tensor * conv1d_2_b = nullptr;
+    ggml_tensor * conv_out_w = nullptr;
+    ggml_tensor * conv_out_b = nullptr;
     ggml_tensor * mm_norm_pre_w = nullptr;
     ggml_tensor * mm_norm_pre_b = nullptr;
     ggml_tensor * mm_norm_mid_w = nullptr;
+
+    // qwen3a
+    ggml_tensor * conv2d_1_w = nullptr;
+    ggml_tensor * conv2d_1_b = nullptr;
+    ggml_tensor * conv2d_2_w = nullptr;
+    ggml_tensor * conv2d_2_b = nullptr;
+    ggml_tensor * conv2d_3_w = nullptr;
+    ggml_tensor * conv2d_3_b = nullptr;
 
     // cogvlm
     ggml_tensor * mm_post_fc_norm_w = nullptr;
@@ -418,6 +465,11 @@ struct clip_model {
     ggml_tensor * mm_4h_to_h_w = nullptr;
     ggml_tensor * mm_boi = nullptr;
     ggml_tensor * mm_eoi = nullptr;
+
+    // hunyuanocr perceiver
+    ggml_tensor * mm_pre_norm_w  = nullptr;
+    ggml_tensor * mm_img_begin   = nullptr;
+    ggml_tensor * mm_img_end     = nullptr;
 
     // deepseek ocr sam
     ggml_tensor * patch_embed_proj_w = nullptr;
@@ -454,6 +506,15 @@ struct clip_model {
     };
     std::map<std::string, clamp_info> clamp_info_map;
 
+    // gemma4 audio conformer
+    std::array<ggml_tensor *, 2> sscp_conv_w = {nullptr};
+    std::array<ggml_tensor *, 2> sscp_conv_b = {nullptr};
+    std::array<ggml_tensor *, 2> sscp_norm_w = {nullptr};
+    ggml_tensor * sscp_inp_proj_w = nullptr;
+    ggml_tensor * sscp_inp_proj_b = nullptr;
+    ggml_tensor * audio_out_proj_w = nullptr;
+    ggml_tensor * audio_out_proj_b = nullptr;
+
     bool audio_has_avgpool() const {
         return proj_type == PROJECTOR_TYPE_QWEN2A
             || proj_type == PROJECTOR_TYPE_VOXTRAL
@@ -462,7 +523,8 @@ struct clip_model {
 
     bool audio_has_stack_frames() const {
         return proj_type == PROJECTOR_TYPE_ULTRAVOX
-            || proj_type == PROJECTOR_TYPE_VOXTRAL;
+            || proj_type == PROJECTOR_TYPE_VOXTRAL
+            || proj_type == PROJECTOR_TYPE_MERALION;
     }
 };
 

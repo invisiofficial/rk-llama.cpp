@@ -38,14 +38,19 @@ export type ToolResultLine = {
 function deriveSingleTurnSections(
 	message: DatabaseMessage,
 	toolMessages: DatabaseMessage[] = [],
-	streamingToolCalls: ApiChatCompletionToolCall[] = []
+	streamingToolCalls: ApiChatCompletionToolCall[] = [],
+	isStreaming: boolean = false
 ): AgenticSection[] {
 	const sections: AgenticSection[] = [];
 
 	// 1. Reasoning content (from dedicated field)
 	if (message.reasoningContent) {
+		const toolCalls = parseToolCalls(message.toolCalls);
+		const hasContentAfterReasoning =
+			!!message.content?.trim() || toolCalls.length > 0 || streamingToolCalls.length > 0;
+		const isPending = isStreaming && !hasContentAfterReasoning;
 		sections.push({
-			type: AgenticSectionType.REASONING,
+			type: isPending ? AgenticSectionType.REASONING_PENDING : AgenticSectionType.REASONING,
 			content: message.reasoningContent
 		});
 	}
@@ -62,8 +67,14 @@ function deriveSingleTurnSections(
 	const toolCalls = parseToolCalls(message.toolCalls);
 	for (const tc of toolCalls) {
 		const resultMsg = toolMessages.find((m) => m.toolCallId === tc.id);
+		// Only show as pending/loading if we're actively streaming; otherwise it's just a tool call without result
+		const type = resultMsg
+			? AgenticSectionType.TOOL_CALL
+			: isStreaming
+				? AgenticSectionType.TOOL_CALL_PENDING
+				: AgenticSectionType.TOOL_CALL;
 		sections.push({
-			type: resultMsg ? AgenticSectionType.TOOL_CALL : AgenticSectionType.TOOL_CALL_PENDING,
+			type,
 			content: resultMsg?.content || '',
 			toolName: tc.function?.name,
 			toolArgs: tc.function?.arguments,
@@ -104,12 +115,13 @@ function deriveSingleTurnSections(
 export function deriveAgenticSections(
 	message: DatabaseMessage,
 	toolMessages: DatabaseMessage[] = [],
-	streamingToolCalls: ApiChatCompletionToolCall[] = []
+	streamingToolCalls: ApiChatCompletionToolCall[] = [],
+	isStreaming: boolean = false
 ): AgenticSection[] {
 	const hasAssistantContinuations = toolMessages.some((m) => m.role === MessageRole.ASSISTANT);
 
 	if (!hasAssistantContinuations) {
-		return deriveSingleTurnSections(message, toolMessages, streamingToolCalls);
+		return deriveSingleTurnSections(message, toolMessages, streamingToolCalls, isStreaming);
 	}
 
 	const sections: AgenticSection[] = [];
@@ -127,7 +139,12 @@ export function deriveAgenticSections(
 			const isLastTurn = i + 1 + turnToolMsgs.length >= toolMessages.length;
 
 			sections.push(
-				...deriveSingleTurnSections(msg, turnToolMsgs, isLastTurn ? streamingToolCalls : [])
+				...deriveSingleTurnSections(
+					msg,
+					turnToolMsgs,
+					isLastTurn ? streamingToolCalls : [],
+					isLastTurn && isStreaming
+				)
 			);
 
 			i += 1 + turnToolMsgs.length;

@@ -32,3 +32,8 @@ if(OpenMP_FOUND)
     target_compile_options(ggml-rknpu2 PRIVATE ${OpenMP_CXX_FLAGS})
     target_link_libraries(ggml-rknpu2 PRIVATE ${OpenMP_CXX_FLAGS})
 endif()
+
+# RKNPU2 debug profiling
+if(GGML_RKNPU2_DEBUG)
+    target_compile_definitions(ggml-rknpu2 PRIVATE GGML_RKNPU2_DEBUG)
+endif()

@@ -4,12 +4,19 @@
 		ChatMessageActions,
 		ChatMessageStatistics,
 		ModelBadge,
-		ModelsSelector
+		ModelsSelectorDropdown
 	} from '$lib/components/app';
 	import { getMessageEditContext } from '$lib/contexts';
 	import { useProcessingState } from '$lib/hooks/use-processing-state.svelte';
 	import { isLoading, isChatStreaming } from '$lib/stores/chat.svelte';
-	import { autoResizeTextarea, copyToClipboard, isIMEComposing } from '$lib/utils';
+	import {
+		autoResizeTextarea,
+		copyToClipboard,
+		isIMEComposing,
+		deriveAgenticSections
+	} from '$lib/utils';
+	import { AgenticSectionType } from '$lib/enums';
+	import { REASONING_TAGS } from '$lib/constants/agentic';
 	import { tick } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import { Check, X } from '@lucide/svelte';
@@ -95,6 +102,49 @@
 	let currentConfig = $derived(config());
 	let isRouter = $derived(isRouterMode());
 	let showRawOutput = $state(false);
+
+	let rawOutputContent = $derived.by(() => {
+		const sections = deriveAgenticSections(message, toolMessages, [], false);
+		const parts: string[] = [];
+
+		for (const section of sections) {
+			switch (section.type) {
+				case AgenticSectionType.REASONING:
+				case AgenticSectionType.REASONING_PENDING:
+					parts.push(`${REASONING_TAGS.START}\n${section.content}\n${REASONING_TAGS.END}`);
+					break;
+
+				case AgenticSectionType.TEXT:
+					parts.push(section.content);
+					break;
+
+				case AgenticSectionType.TOOL_CALL:
+				case AgenticSectionType.TOOL_CALL_PENDING:
+				case AgenticSectionType.TOOL_CALL_STREAMING: {
+					const callObj: Record<string, unknown> = { name: section.toolName };
+
+					if (section.toolArgs) {
+						try {
+							callObj.arguments = JSON.parse(section.toolArgs);
+						} catch {
+							callObj.arguments = section.toolArgs;
+						}
+					}
+
+					parts.push(JSON.stringify(callObj, null, 2));
+
+					if (section.toolResult) {
+						parts.push(`[Tool Result]\n${section.toolResult}`);
+					}
+
+					break;
+				}
+			}
+		}
+
+		return parts.join('\n\n\n');
+	});
+
 	let activeStatsView = $state<ChatMessageStatsView>(ChatMessageStatsView.GENERATION);
 	let statsContainerEl: HTMLDivElement | undefined = $state();
 
@@ -252,12 +302,13 @@
 		</div>
 	{:else if message.role === MessageRole.ASSISTANT}
 		{#if showRawOutput}
-			<pre class="raw-output">{messageContent || ''}</pre>
+			<pre class="raw-output">{rawOutputContent || ''}</pre>
 		{:else}
 			<ChatMessageAgenticContent
 				{message}
 				{toolMessages}
 				isStreaming={isChatStreaming()}
+				{isLastAssistantMessage}
 				highlightTurns={highlightAgenticTurns}
 			/>
 		{/if}
@@ -286,10 +337,10 @@
 				class="inline-flex flex-wrap items-start gap-2 text-xs text-muted-foreground"
 			>
 				{#if isRouter}
-					<ModelsSelector
+					<ModelsSelectorDropdown
 						currentModel={displayedModel}
 						disabled={isLoading()}
-						onModelChange={async (modelId, modelName) => {
+						onModelChange={async (modelId: string, modelName: string) => {
 							const status = modelsStore.getModelStatus(modelId);
 
 							if (status !== ServerModelStatus.LOADED) {

@@ -89,6 +89,12 @@ export const SYNCABLE_PARAMETERS: SyncableParameter[] = [
 	{ key: 'max_tokens', serverKey: 'max_tokens', type: SyncableParameterType.NUMBER, canSync: true },
 	{ key: 'samplers', serverKey: 'samplers', type: SyncableParameterType.STRING, canSync: true },
 	{
+		key: 'backend_sampling',
+		serverKey: 'backend_sampling',
+		type: SyncableParameterType.BOOLEAN,
+		canSync: true
+	},
+	{
 		key: 'pasteLongTextToFileLen',
 		serverKey: 'pasteLongTextToFileLen',
 		type: SyncableParameterType.NUMBER,
@@ -121,6 +127,12 @@ export const SYNCABLE_PARAMETERS: SyncableParameter[] = [
 	{
 		key: 'askForTitleConfirmation',
 		serverKey: 'askForTitleConfirmation',
+		type: SyncableParameterType.BOOLEAN,
+		canSync: true
+	},
+	{
+		key: 'titleGenerationUseFirstLine',
+		serverKey: 'titleGenerationUseFirstLine',
 		type: SyncableParameterType.BOOLEAN,
 		canSync: true
 	},
@@ -192,12 +204,6 @@ export const SYNCABLE_PARAMETERS: SyncableParameter[] = [
 		canSync: true
 	},
 	{
-		key: 'autoShowSidebarOnNewChat',
-		serverKey: 'autoShowSidebarOnNewChat',
-		type: SyncableParameterType.BOOLEAN,
-		canSync: true
-	},
-	{
 		key: 'showRawModelNames',
 		serverKey: 'showRawModelNames',
 		type: SyncableParameterType.BOOLEAN,
@@ -231,6 +237,12 @@ export const SYNCABLE_PARAMETERS: SyncableParameter[] = [
 	{
 		key: 'excludeReasoningFromContext',
 		serverKey: 'excludeReasoningFromContext',
+		type: SyncableParameterType.BOOLEAN,
+		canSync: true
+	},
+	{
+		key: 'sendOnEnter',
+		serverKey: 'sendOnEnter',
 		type: SyncableParameterType.BOOLEAN,
 		canSync: true
 	}

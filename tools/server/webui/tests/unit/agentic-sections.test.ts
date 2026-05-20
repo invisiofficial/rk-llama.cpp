@@ -85,7 +85,7 @@ describe('deriveAgenticSections', () => {
 				{ id: 'call_1', type: 'function', function: { name: 'bash', arguments: '{}' } }
 			])
 		});
-		const sections = deriveAgenticSections(msg, []);
+		const sections = deriveAgenticSections(msg, [], [], true);
 		expect(sections).toHaveLength(1);
 		expect(sections[0].type).toBe(AgenticSectionType.TOOL_CALL_PENDING);
 		expect(sections[0].toolName).toBe('bash');
@@ -160,6 +160,36 @@ describe('deriveAgenticSections', () => {
 		expect(sections[3].type).toBe(AgenticSectionType.REASONING);
 		expect(sections[4].type).toBe(AgenticSectionType.TEXT);
 		expect(sections[4].content).toBe('Here is the analysis.');
+	});
+
+	it('returns REASONING_PENDING when streaming with only reasoning content', () => {
+		const msg = makeAssistant({
+			reasoningContent: 'Let me think about this...'
+		});
+		const sections = deriveAgenticSections(msg, [], [], true);
+		expect(sections).toHaveLength(1);
+		expect(sections[0].type).toBe(AgenticSectionType.REASONING_PENDING);
+		expect(sections[0].content).toBe('Let me think about this...');
+	});
+
+	it('returns REASONING (not pending) when streaming but text content has appeared', () => {
+		const msg = makeAssistant({
+			content: 'The answer is',
+			reasoningContent: 'Let me think...'
+		});
+		const sections = deriveAgenticSections(msg, [], [], true);
+		expect(sections).toHaveLength(2);
+		expect(sections[0].type).toBe(AgenticSectionType.REASONING);
+		expect(sections[1].type).toBe(AgenticSectionType.TEXT);
+	});
+
+	it('returns REASONING (not pending) when not streaming', () => {
+		const msg = makeAssistant({
+			reasoningContent: 'Let me think...'
+		});
+		const sections = deriveAgenticSections(msg, [], [], false);
+		expect(sections).toHaveLength(1);
+		expect(sections[0].type).toBe(AgenticSectionType.REASONING);
 	});
 
 	it('multi-turn: streaming tool calls on last turn', () => {

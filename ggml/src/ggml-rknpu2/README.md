@@ -43,6 +43,8 @@ ulimit -n 65536
 
 The following benchmarks were conducted on an RK3588, comparing the performance, accuracy, and power consumption of the NPU backend against the standard CPU (NEON) backend.
 
+> **Note:** The results in the table below were obtained with an old version of this fork and may vary slightly from the current version. Use these for reference only. The **Chipsets** section below, however, contains up-to-date precision calculations.
+
 ### Dense Models
 
 | Model | Type | Backend | Perplexity | PP (tok/s) | TG (tok/s) | Power (W) |
@@ -148,31 +150,34 @@ Because of this double conversion process, you must carefully pair your input GG
 
 The backend configures operations based on hardware pipelines-specific hardware-accelerated paths mapping mathematical operations to native NPU types. Each supported chipset defines its own set of pipelines and default quantization behaviors.
 
+Below is a comparison of all available hardware pipelines on all available chipsets. The **KL Divergence** metrics were measured on the `Gemma-3-1b-it` model to isolate the accuracy impact of the NPU's internal quantization algorithms.
+
+All results were measured using the command below. Baseline logits were obtained from F16 weights using the CPU backend. The table below shows the default CPU backend precision calculations for comparison.
+
+```sh
+taskset -c 4-7 ./build/bin/llama-perplexity -m ./model.gguf -f ./wiki.test.raw -t 4 -b 512 --chunks 32 --kl-divergence-base ~/Projects/model-logits.kld --kl-divergence
+```
+
+| Name | Operation | Perplexity | KL-Divergence | Top-P | Notes |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `F16` | - | 26.20 ± 1.08 | 0.000000 ± 0.000000 | 100.00 ± 0.00 % | - |
+| `Q8_0` | - | 26.08 ± 1.07 | 0.004442 ± 0.000289 | 97.30 ± 0.18 % | - |
+| `Q4_0` | - | 30.76 ± 1.31 | 0.188193 ± 0.005248 | 80.97 ± 0.44 %  | - |
+
 ### RK3588
 
 #### Available Pipelines
 
-Below is a comparison of all available hardware pipelines on the RK3588. 
-
-The **Perplexity** metrics were measured on the `Granite-4.0-350M-F16` model to isolate the accuracy impact of the NPU's internal quantization algorithms.
-
-| Name | Operation | Perplexity | Notes |
-| :--- | :--- | :--- | :--- |
-| `W16A16_HADAMARD` | FP16xFP16 | 20.74 ± 0.74 | Hadamard Transform\* |
-| `W16A16_STANDARD` | FP16xFP16 | 20.74 ± 0.74 | - |
-| `W8A8_HADAMARD` | INT8xINT8 | 20.85 ± 0.74 | Hadamard Transform\* |
-| `W8A8_STANDARD` | INT8xINT8 | 22.50 ± 0.81 | - |
-| `W4A4_HADAMARD` | INT4xINT4 | 86.16 ± 3.42 | Hadamard\*, KL-Div\*\* |
-| `W4A4_STANDARD` | INT4xINT4 | 240048.97 ± 9261.03 | KL-Divergence\*\* |
-
-\* **Hadamard Transform:** Applies a randomized Fast Walsh-Hadamard Transform to smooth out activation outliers before quantization (see [2404.00456](https://arxiv.org/abs/2404.00456)).<br>
-\*\* **KL-Divergence:** Uses entropy-based calibration to find the optimal scaling factor for 4-bit weights by minimizing information loss (see [2411.02530](https://arxiv.org/abs/2411.02530)).
-
-> **Note:** As seen in the table, pure `W4A4_STANDARD` produces completely broken outputs (extremely high perplexity). This is due to massive outliers being heavily clipped in the limited 4-bit range. The `W4A4_HADAMARD` pipeline mitigates this by mathematically distributing the outliers across all channels, making 4-bit inference actually usable, though it introduces some CPU overhead.
+| Name | Operation | Perplexity | KL-Divergence | Top-P | Notes |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `W16A16_HADAMARD` | FP16xFP16 | 26.18 ± 1.07 | 0.000161 ± 0.000011 | 99.40 ± 0.09 % | Hadamard Transform\* |
+| `W16A16_STANDARD` | FP16xFP16 | 26.17 ± 1.07 | 0.000156 ± 0.000011 | 99.46 ± 0.08 % | - |
+| `W8A8_HADAMARD` | INT8xINT8 | 26.20 ± 1.07 | 0.003265 ± 0.000188 | 97.51 ± 0.17 % | Hadamard Transform\* |
+| `W8A8_STANDARD` | INT8xINT8 | 26.87 ± 1.10 | 0.074325 ± 0.002338 | 87.88 ± 0.36 % | - |
+| `W4A4_HADAMARD` | INT4xINT4 | 40.72 ± 1.67 | 0.806579 ± 0.013299 | 61.56 ± 0.54 % | Hadamard Transform\*|
+| `W4A4_STANDARD` | INT4xINT4 | 88738.26 ± 4853.41 | 9.126788 ± 0.046108 | 1.45 ± 0.13 % | - |
 
 #### Default Mappings
-
-If no custom `RKNPU_HYBRID` is provided, the RK3588 backend will automatically map your input GGUF model types to the following default NPU pipelines to provide the best out-of-the-box balance of speed and accuracy:
 
 | Input Weight Type | Default Hardware Pipeline | Bits Per Weight |
 | :--- | :--- | :--- |
@@ -180,6 +185,8 @@ If no custom `RKNPU_HYBRID` is provided, the RK3588 backend will automatically m
 | `Q8_0` | [`W8A8_STANDARD`] | 8 |
 | `Q6_K` | [`W8A8_STANDARD`, `W4A4_HADAMARD`] | 6 |
 | `Q4_0` | [`W4A4_HADAMARD`] | 4 |
+
+\* **Hadamard Transform:** Applies a randomized Fast Walsh-Hadamard Transform to smooth out activation outliers before quantization (see [2404.00456](https://arxiv.org/abs/2404.00456)).
 
 ## FAQ
 

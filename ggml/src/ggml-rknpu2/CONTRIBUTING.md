@@ -19,7 +19,7 @@ All backend-specific code is contained within the `ggml/src/ggml-rknpu2` directo
     Contains mathematical utilities for scaling and symmetric quantization from FP32 to target NPU integer formats (INT8, INT4), as well as dequantization routines.
 
 *   **`rknpu2-calibration.cpp`**
-    Provides statistical methods for finding optimal quantization parameters (e.g., KL-Divergence, Min-MSE) and matrix transformations (like the Fast Walsh-Hadamard Transform).
+    Provides matrix transformations (like the Fast Walsh-Hadamard Transform).
 
 ## Future Directions
 

@@ -12,37 +12,6 @@
  */
 namespace rknpu2_calibration {
 
-// --- Calibration Implementations ---
-
-/**
- * @brief Finds the absolute maximum value based on a given percentile.
- * @param data Pointer to the source float data.
- * @param n_elements The number of elements in the data array.
- * @param percentile The percentile to calculate (e.g., 99.9f).
- * @return The absolute value at the specified percentile.
- */
-float calculate_percentile_amax(const float * data, size_t n_elements, float percentile);
-
-/**
- * @brief Finds the optimal amax by iteratively minimizing Mean Squared Error (MSE).
- * @param data Pointer to the source float data.
- * @param n_elements The number of elements in the data array.
- * @param num_steps The number of steps to iterate through in the search space.
- * @return The amax value that results in the lowest quantization error.
- */
-float calculate_min_mse_amax(const float * data, size_t n_elements, int num_steps = 128);
-
-/**
- * @brief Finds the optimal amax by minimizing KL-Divergence between FP32 and INT4 distributions.
- * @param data Pointer to the source float data.
- * @param n_elements The number of elements in the data array.
- * @param num_bins The number of bins for the histogram distributions.
- * @param num_steps The number of steps to iterate through in the search space.
- * @return The amax value that minimizes the information loss.
- */
-float calculate_entropy_amax(const float* data, size_t n_elements, int num_bins = 2048, int num_steps = 128);
-
-
 // --- Hadamard Transform Implementations ---
 
 /**

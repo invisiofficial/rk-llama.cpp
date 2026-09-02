@@ -57,6 +57,7 @@ static const std::map<llm_arch, const char *> LLM_ARCH_NAMES = {
     { LLM_ARCH_GEMMA3,           "gemma3"           },
     { LLM_ARCH_GEMMA3N,          "gemma3n"          },
     { LLM_ARCH_GEMMA4,           "gemma4"           },
+    { LLM_ARCH_GEMMA4_ASSISTANT, "gemma4-assistant" },
     { LLM_ARCH_GEMMA_EMBEDDING,  "gemma-embedding"  },
     { LLM_ARCH_STARCODER2,       "starcoder2"       },
     { LLM_ARCH_MAMBA,            "mamba"            },
@@ -1349,6 +1350,7 @@ static std::set<llm_tensor> llm_get_tensor_names(llm_arch arch) {
                 LLM_TENSOR_LAUREL_R,
                 LLM_TENSOR_LAUREL_POST_NORM,
             };
+        case LLM_ARCH_GEMMA4_ASSISTANT:
         case LLM_ARCH_GEMMA4:
             return {
                 LLM_TENSOR_ROPE_FREQS,

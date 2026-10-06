@@ -1081,7 +1081,8 @@ static void ggml_backend_rknpu_buffer_set_tensor(ggml_backend_buffer_t buffer, s
         // Initializing Hadamard Transform Logic
         if (pipeline->use_hadamard) {
             std::vector<float> s_vec(K_op, 1.0f);
-            std::mt19937 gen(reinterpret_cast<uintptr_t>(tensor));
+            std::string t_name = tensor->name;
+            std::mt19937 gen(static_cast<uint32_t>(std::hash<std::string>{}(t_name)));
             std::uniform_int_distribution<int> distrib(0, 1);
 
             for(int k = 0; k < K_op; ++k) {
@@ -1306,6 +1307,13 @@ static bool ggml_backend_rknpu_device_supports_op(ggml_backend_dev_t dev, const 
             // Rejecting zero-dimension ops
             if (src0->ne[0] == 0 || src0->ne[1] == 0 ||
                 src1->ne[0] == 0 || src1->ne[1] == 0) {
+                return false;
+            }
+
+            // Rejecting higher-dimension ops
+            if (src0->ne[2] != 1 || src0->ne[3] != 1 ||
+                src1->ne[2] != 1 || src1->ne[3] != 1 ||
+                op->ne[2]   != 1 || op->ne[3]   != 1) {
                 return false;
             }
 

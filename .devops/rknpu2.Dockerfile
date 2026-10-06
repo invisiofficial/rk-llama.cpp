@@ -1,7 +1,7 @@
 # Containerized RKNPU2 build of llama.cpp — Rockchip NPU GGML backend.
 #
 # Builds the in-tree source with the RKNPU2 backend and ships llama-server together with the
-# vendored Rockchip runtime (librknnrt.so). Target: arm64 / RK3588(S) (e.g. Orange Pi 5 / 5 Pro).
+# vendored Rockchip runtime (librknnrt.so).
 #
 # The NPU is reached from the container via the host DRM render node + dma-heap, so run with the
 # devices mapped in, e.g.:
@@ -10,7 +10,8 @@
 #     -e RKNPU_HYBRID=W8A8_STANDARD --ulimit nofile=65536 \
 #     -v /path/to/models:/models \
 #     <image> -m /models/model-Q8_0.gguf --host 0.0.0.0 --port 8080 -np 1 --jinja
-# See docs/rknpu2-docker.md for the full run guide (quantization, tool-calling, caveats).
+#
+# See docs/rknpu2-docker.md for the full run guide.
 
 ARG UBUNTU_VERSION=bookworm
 
@@ -30,9 +31,7 @@ FROM debian:${UBUNTU_VERSION}-slim AS runtime
 RUN apt-get update && apt-get install -y --no-install-recommends \
         libcurl4 libgomp1 ca-certificates \
     && rm -rf /var/lib/apt/lists/*
-# Built binaries + the ggml/llama shared libraries (incl. libggml-rknpu2.so).
 COPY --from=build /src/build/bin/ /opt/llama/bin/
-# Vendored Rockchip NPU userspace runtime — libggml-rknpu2.so dlopens/links against it at runtime.
 COPY --from=build /src/ggml/src/ggml-rknpu2/libs/librknnrt.so /usr/lib/librknnrt.so
 RUN ldconfig
 ENV LD_LIBRARY_PATH=/opt/llama/bin

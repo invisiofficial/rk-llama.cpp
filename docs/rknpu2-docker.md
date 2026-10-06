@@ -1,6 +1,6 @@
 # Running the RKNPU2 backend in a container
 
-This guide covers building and running the Rockchip NPU (RKNPU2) backend of llama.cpp as a container on
+This guide covers building and running the Rockchip NPU backend of llama.cpp as a container on
 RK3588(S) boards (Orange Pi 5 / 5 Pro, Radxa Rock 5, etc.). The Dockerfile is
 [`.devops/rknpu2.Dockerfile`](../.devops/rknpu2.Dockerfile).
 
@@ -8,7 +8,7 @@ RK3588(S) boards (Orange Pi 5 / 5 Pro, Radxa Rock 5, etc.). The Dockerfile is
 
 - An RK3588(S) board on a **Rockchip BSP / vendor kernel** (e.g. Armbian `*-vendor-rk35xx`, kernel 6.1).
   The mainline kernel does **not** expose the `rknpu` driver that the userspace runtime binds to.
-- RKNPU kernel driver **≥ 0.9.6** (check: `cat /sys/kernel/debug/rknpu/version`). Avoid 0.9.7.
+- RKNPU kernel driver **≥ 0.9.6** (check: `cat /sys/kernel/debug/rknpu/version`).
 - The NPU exposed as a DRM render node plus the dma-heap devices. On most boards the NPU is
   `/dev/dri/renderD129` and the GPU is `renderD128`, **but the numbering is not stable across boots /
   kernels** — map the whole `/dev/dri` directory rather than a fixed node.
@@ -42,10 +42,6 @@ simplest fallback for a trusted host.
 
 ## Notes & recommendations
 
-- **Use `Q8_0` GGUF.** The backend requantizes GGUF weights into the NPU's native formats at load; the
-  `Q8_0 → W8A8` path is the fast one. `Q4_0` (→ W4A4-Hadamard) is noticeably slower on the NPU.
-- **The NPU's win is prompt processing (prefill / time-to-first-token)** — typically several times faster
-  than CPU. Token generation is roughly on par with CPU. Long prompts benefit most.
 - **One NPU consumer per device.** Running two processes that touch the NPU simultaneously can crash the
   inference process (and, on some driver versions, the system). Keep a single `llama-server` per board and
   serialize (`-np 1`).
@@ -54,7 +50,6 @@ simplest fallback for a trusted host.
   `tool_calls`.
 - For best/steadiest throughput, pin the NPU devfreq governor to `performance`:
   `echo performance | sudo tee /sys/class/devfreq/*npu*/governor`.
-- `RKNPU_DEVICE` selects the SoC (default `RK3588`); `RKNPU_CORES` restricts cores (default = all 3).
 
 ## Kubernetes
 

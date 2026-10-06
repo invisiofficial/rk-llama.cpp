@@ -11,11 +11,6 @@ namespace rknpu2_calibration {
 
 // --- Hadamard Transform Implementations ---
 
-// Helper to check if a number is a power of two
-static bool is_power_of_two(int n) {
-    return (n > 0) && ((n & (n - 1)) == 0);
-}
-
 // Iterative Fast Walsh-Hadamard Transform (in-place)
 static void fwht_iterative(float* data, int size) {
     for (int h = 1; h < size; h <<= 1) {
@@ -52,12 +47,12 @@ void hadamard_transform(float* dst, const float* src, int K, int padded_size) {
 
     // Using a thread-local buffer to avoid repeated heap allocations.
     thread_local static std::vector<float> padded_data;
-    
+
     // Resizing the buffer only if the current one is too small.
     if (padded_data.size() < (size_t)padded_size) {
         padded_data.resize(padded_size);
     }
-    
+
     // Copying source data and zero-fill the rest (padding).
     memcpy(padded_data.data(), src, K * sizeof(float));
     if (padded_size > K) {

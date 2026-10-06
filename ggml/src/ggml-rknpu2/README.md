@@ -155,7 +155,7 @@ Below is a comparison of all available hardware pipelines on all available chips
 All results were measured using the command below. Baseline logits were obtained from F16 weights using the CPU backend. The table below shows the default CPU backend precision calculations for comparison.
 
 ```sh
-taskset -c 4-7 ./build/bin/llama-perplexity -m ./model.gguf -f ./wiki.test.raw -t 4 -b 512 --chunks 32 --kl-divergence-base ~/Projects/model-logits.kld --kl-divergence
+taskset -c 4-7 ./build/bin/llama-perplexity -m ./model.gguf -f ./wiki.test.raw -t 4 -b 512 --chunks 32 --kl-divergence-base ./model-logits.kld --kl-divergence
 ```
 
 | Name | Operation | Perplexity | KL-Divergence | Top-P | Notes |
@@ -170,11 +170,11 @@ taskset -c 4-7 ./build/bin/llama-perplexity -m ./model.gguf -f ./wiki.test.raw -
 
 | Name | Operation | Perplexity | KL-Divergence | Top-P | Notes |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| `W16A16_HADAMARD` | FP16xFP16 | 26.18 ± 1.07 | 0.000161 ± 0.000011 | 99.40 ± 0.09 % | Hadamard Transform\* |
+| `W16A16_HADAMARD` | FP16xFP16 | 26.17 ± 1.07 | 0.000158 ± 0.000011 | 99.49 ± 0.08 % | Hadamard Transform\* |
 | `W16A16_STANDARD` | FP16xFP16 | 26.17 ± 1.07 | 0.000156 ± 0.000011 | 99.46 ± 0.08 % | - |
-| `W8A8_HADAMARD` | INT8xINT8 | 26.20 ± 1.07 | 0.003265 ± 0.000188 | 97.51 ± 0.17 % | Hadamard Transform\* |
+| `W8A8_HADAMARD` | INT8xINT8 | 26.15 ± 1.07 | 0.003031 ± 0.000143 | 97.64 ± 0.17 % | Hadamard Transform\* |
 | `W8A8_STANDARD` | INT8xINT8 | 26.87 ± 1.10 | 0.074325 ± 0.002338 | 87.88 ± 0.36 % | - |
-| `W4A4_HADAMARD` | INT4xINT4 | 40.72 ± 1.67 | 0.806579 ± 0.013299 | 61.56 ± 0.54 % | Hadamard Transform\*|
+| `W4A4_HADAMARD` | INT4xINT4 | 40.93 ± 1.71 | 0.817203 ± 0.013658 | 62.13 ± 0.54 % | Hadamard Transform\*|
 | `W4A4_STANDARD` | INT4xINT4 | 88738.26 ± 4853.41 | 9.126788 ± 0.046108 | 1.45 ± 0.13 % | - |
 
 #### Default Mappings

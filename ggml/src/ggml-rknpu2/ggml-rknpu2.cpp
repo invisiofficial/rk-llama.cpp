@@ -1350,6 +1350,8 @@ static ggml_backend_buffer_t ggml_backend_rknpu_buffer_type_alloc_buffer(ggml_ba
         /* .memset_tensor = */ NULL,
         /* .set_tensor    = */ ggml_backend_rknpu_buffer_set_tensor,
         /* .get_tensor    = */ ggml_backend_rknpu_buffer_get_tensor,
+        /* .set_tensor_2d = */ NULL,
+        /* .get_tensor_2d = */ NULL,
         /* .cpy_tensor    = */ NULL,
         /* .clear         = */ ggml_backend_rknpu_buffer_clear,
         /* .reset         = */ NULL,
@@ -1488,6 +1490,8 @@ static ggml_backend_t ggml_backend_rknpu_device_init_backend(ggml_backend_dev_t 
         /* .free               = */ ggml_backend_rknpu_free,
         /* .set_tensor_async   = */ NULL,
         /* .get_tensor_async   = */ NULL,
+        /* .set_tensor_2d_async= */ NULL,
+        /* .get_tensor_2d_async= */ NULL,
         /* .cpy_tensor_async   = */ NULL,
         /* .synchronize        = */ NULL,
         /* .graph_plan_create  = */ NULL,
@@ -1529,12 +1533,14 @@ static ggml_backend_dev_t ggml_backend_rknpu_reg_get_device(ggml_backend_reg_t r
     }
 
     static const struct ggml_backend_buffer_type_i rknpu_buffer_type_interface = {
-        /* .get_name       = */ ggml_backend_rknpu_buffer_type_get_name,
-        /* .alloc_buffer   = */ ggml_backend_rknpu_buffer_type_alloc_buffer,
-        /* .get_alignment  = */ ggml_backend_rknpu_buffer_type_get_alignment,
-        /* .get_max_size   = */ NULL,
-        /* .get_alloc_size = */ ggml_backend_rknpu_buffer_type_get_alloc_size,
-        /* .is_host        = */ NULL,
+        /* .get_name         = */ ggml_backend_rknpu_buffer_type_get_name,
+        /* .alloc_buffer     = */ ggml_backend_rknpu_buffer_type_alloc_buffer,
+        /* .alloc_buffer_n   = */ NULL,
+        /* .get_alignment    = */ ggml_backend_rknpu_buffer_type_get_alignment,
+        /* .get_max_size     = */ NULL,
+        /* .get_alloc_size   = */ ggml_backend_rknpu_buffer_type_get_alloc_size,
+        /* .get_alloc_size_n = */ NULL,
+        /* .is_host          = */ NULL,
     };
 
     static struct ggml_backend_buffer_type rknpu_buffer_type = {

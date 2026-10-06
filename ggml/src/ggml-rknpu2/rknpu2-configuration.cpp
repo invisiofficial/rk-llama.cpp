@@ -144,7 +144,8 @@ Rknpu2ConfigManager::Rknpu2ConfigManager() {
             /* .k_align       = */ 32,
             /* .n_align       = */ 16,
             /* .effective_k   = */ 0,
-            /* .use_hadamard  = */ false
+            /* .use_hadamard  = */ false,
+            /* .use_lowrank   = */ false
         },
         {
             /* .pipeline_name = */ "W16A16_HADAMARD",
@@ -155,7 +156,8 @@ Rknpu2ConfigManager::Rknpu2ConfigManager() {
             /* .k_align       = */ 32,
             /* .n_align       = */ 16,
             /* .effective_k   = */ 0,
-            /* .use_hadamard  = */ true
+            /* .use_hadamard  = */ true,
+            /* .use_lowrank   = */ false
         },
         {
             /* .pipeline_name = */ "W8A8_STANDARD",
@@ -166,7 +168,8 @@ Rknpu2ConfigManager::Rknpu2ConfigManager() {
             /* .k_align       = */ 32,
             /* .n_align       = */ 32,
             /* .effective_k   = */ 0,
-            /* .use_hadamard  = */ false
+            /* .use_hadamard  = */ false,
+            /* .use_lowrank   = */ false
         },
         {
             /* .pipeline_name = */ "W8A8_HADAMARD",
@@ -177,7 +180,32 @@ Rknpu2ConfigManager::Rknpu2ConfigManager() {
             /* .k_align       = */ 32,
             /* .n_align       = */ 32,
             /* .effective_k   = */ 0,
-            /* .use_hadamard  = */ true
+            /* .use_hadamard  = */ true,
+            /* .use_lowrank   = */ false
+        },
+        {
+            /* .pipeline_name = */ "W8A8_LOWRANK",
+            /* .npu_type_a    = */ NPU_TYPE_INT8,
+            /* .npu_type_b    = */ NPU_TYPE_INT8,
+            /* .npu_type_c    = */ NPU_TYPE_INT32,
+            /* .mm_type       = */ RKNN_INT8_MM_INT8_TO_INT32,
+            /* .k_align       = */ 32,
+            /* .n_align       = */ 32,
+            /* .effective_k   = */ 0,
+            /* .use_hadamard  = */ false,
+            /* .use_lowrank   = */ true
+        },
+        {
+            /* .pipeline_name = */ "W8A8_HADAMARD_LOWRANK",
+            /* .npu_type_a    = */ NPU_TYPE_INT8,
+            /* .npu_type_b    = */ NPU_TYPE_INT8,
+            /* .npu_type_c    = */ NPU_TYPE_INT32,
+            /* .mm_type       = */ RKNN_INT8_MM_INT8_TO_INT32,
+            /* .k_align       = */ 32,
+            /* .n_align       = */ 32,
+            /* .effective_k   = */ 0,
+            /* .use_hadamard  = */ true,
+            /* .use_lowrank   = */ true
         },
         {
             /* .pipeline_name = */ "W4A4_STANDARD",
@@ -188,7 +216,8 @@ Rknpu2ConfigManager::Rknpu2ConfigManager() {
             /* .k_align       = */ 32,
             /* .n_align       = */ 64,
             /* .effective_k   = */ 0,
-            /* .use_hadamard  = */ false
+            /* .use_hadamard  = */ false,
+            /* .use_lowrank   = */ false
         },
         {
             /* .pipeline_name = */ "W4A4_HADAMARD",
@@ -199,7 +228,32 @@ Rknpu2ConfigManager::Rknpu2ConfigManager() {
             /* .k_align       = */ 32,
             /* .n_align       = */ 64,
             /* .effective_k   = */ 0,
-            /* .use_hadamard  = */ true
+            /* .use_hadamard  = */ true,
+            /* .use_lowrank   = */ false
+        },
+        {
+            /* .pipeline_name = */ "W4A4_LOWRANK",
+            /* .npu_type_a    = */ NPU_TYPE_INT4,
+            /* .npu_type_b    = */ NPU_TYPE_INT4,
+            /* .npu_type_c    = */ NPU_TYPE_INT16,
+            /* .mm_type       = */ RKNN_INT4_MM_INT4_TO_INT16,
+            /* .k_align       = */ 32,
+            /* .n_align       = */ 64,
+            /* .effective_k   = */ 0,
+            /* .use_hadamard  = */ false,
+            /* .use_lowrank   = */ true
+        },
+        {
+            /* .pipeline_name = */ "W4A4_HADAMARD_LOWRANK",
+            /* .npu_type_a    = */ NPU_TYPE_INT4,
+            /* .npu_type_b    = */ NPU_TYPE_INT4,
+            /* .npu_type_c    = */ NPU_TYPE_INT16,
+            /* .mm_type       = */ RKNN_INT4_MM_INT4_TO_INT16,
+            /* .k_align       = */ 32,
+            /* .n_align       = */ 64,
+            /* .effective_k   = */ 0,
+            /* .use_hadamard  = */ true,
+            /* .use_lowrank   = */ true
         }
     };
 
@@ -209,9 +263,9 @@ Rknpu2ConfigManager::Rknpu2ConfigManager() {
 
     // Defining default quantization sequences for each supported ggml_type
     rk3588_config.default_patterns[(int)GGML_TYPE_F16]  = {"W16A16_STANDARD"};
-    rk3588_config.default_patterns[(int)GGML_TYPE_Q8_0] = {"W8A8_STANDARD"};
-    rk3588_config.default_patterns[(int)GGML_TYPE_Q6_K] = {"W8A8_STANDARD", "W4A4_HADAMARD"};
-    rk3588_config.default_patterns[(int)GGML_TYPE_Q4_0] = {"W4A4_HADAMARD"};
+    rk3588_config.default_patterns[(int)GGML_TYPE_Q8_0] = {"W8A8_LOWRANK"};
+    rk3588_config.default_patterns[(int)GGML_TYPE_Q6_K] = {"W8A8_LOWRANK", "W4A4_HADAMARD_LOWRANK"};
+    rk3588_config.default_patterns[(int)GGML_TYPE_Q4_0] = {"W4A4_HADAMARD_LOWRANK"};
 
     device_configs["RK3588"] = rk3588_config;
 

@@ -73,6 +73,7 @@ struct Rknpu2HardwarePipeline {
 
     int effective_k;            // Specific K limit for matrix tiling
     bool use_hadamard;          // Flag for using Hadamard Transform
+    bool use_lowrank;           // Flag for using Low-Rank Approximation
 };
 
 /**

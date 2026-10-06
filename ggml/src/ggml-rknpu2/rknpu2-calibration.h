@@ -34,4 +34,19 @@ void hadamard_transform(float* dst, const float* src, int K, int padded_size);
  */
 int next_power_of_two(int n);
 
+// --- Low-Rank Approximation Implementations ---
+
+/**
+ * @brief Computes a strictly upper-bounding Rank-1 decomposition (u * v^T >= S)
+ * of a scale matrix in closed form.
+ *
+ * @param matrix Row-major weight matrix of shape (N_seg x K_seg).
+ * @param K_seg Number of columns (K dimension).
+ * @param N_seg Number of rows (N dimension).
+ * @param qmax Maximum quantization value.
+ * @param u_out Output-axis factors (size N_seg).
+ * @param v_out Input-axis factors (size K_seg).
+ */
+void lowrank_decomposition(const float * matrix, int K_seg, int N_seg, float qmax, float * u_out, float * v_out);
+
 } // namespace rknpu2_calibration

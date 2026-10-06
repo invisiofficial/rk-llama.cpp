@@ -172,9 +172,13 @@ taskset -c 4-7 ./build/bin/llama-perplexity -m ./model.gguf -f ./wiki.test.raw -
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | `W16A16_HADAMARD` | FP16xFP16 | 26.17 ± 1.07 | 0.000158 ± 0.000011 | 99.49 ± 0.08 % | Hadamard Transform\* |
 | `W16A16_STANDARD` | FP16xFP16 | 26.17 ± 1.07 | 0.000156 ± 0.000011 | 99.46 ± 0.08 % | - |
+| `W8A8_HADAMARD_LOWRANK` | INT8xINT8 | 26.08 ± 1.07 | 0.002805 ± 0.000202 | 97.79 ± 0.16 % | Hadamard Transform\*, Low-Rank Approximation\*\* |
 | `W8A8_HADAMARD` | INT8xINT8 | 26.15 ± 1.07 | 0.003031 ± 0.000143 | 97.64 ± 0.17 % | Hadamard Transform\* |
+| `W8A8_LOWRANK` | INT8xINT8 | 26.30 ± 1.07 | 0.072085 ± 0.002560 | 88.49 ± 0.35 % | Low-Rank Approximation\*\* |
 | `W8A8_STANDARD` | INT8xINT8 | 26.87 ± 1.10 | 0.074325 ± 0.002338 | 87.88 ± 0.36 % | - |
+| `W4A4_HADAMARD_LOWRANK` | INT4xINT4 | 36.54 ± 1.50 | 0.701652 ± 0.012223 | 64.38 ± 0.53 % | Hadamard Transform\*, Low-Rank Approximation\*\*|
 | `W4A4_HADAMARD` | INT4xINT4 | 40.93 ± 1.71 | 0.817203 ± 0.013658 | 62.13 ± 0.54 % | Hadamard Transform\*|
+| `W4A4_LOWRANK` | INT4xINT4 | 485565.45 ± 31080.30 | 10.918173 ± 0.053307 | 1.56 ± 0.14 % | Low-Rank Approximation\*\* |
 | `W4A4_STANDARD` | INT4xINT4 | 88738.26 ± 4853.41 | 9.126788 ± 0.046108 | 1.45 ± 0.13 % | - |
 
 #### Default Mappings
@@ -182,11 +186,12 @@ taskset -c 4-7 ./build/bin/llama-perplexity -m ./model.gguf -f ./wiki.test.raw -
 | Input Weight Type | Default Hardware Pipeline | Bits Per Weight |
 | :--- | :--- | :--- |
 | `F16` | [`W16A16_STANDARD`] | 16 |
-| `Q8_0` | [`W8A8_STANDARD`] | 8 |
-| `Q6_K` | [`W8A8_STANDARD`, `W4A4_HADAMARD`] | 6 |
-| `Q4_0` | [`W4A4_HADAMARD`] | 4 |
+| `Q8_0` | [`W8A8_LOWRANK`] | 8 |
+| `Q6_K` | [`W8A8_LOWRANK`, `W4A4_HADAMARD_LOWRANK`] | 6 |
+| `Q4_0` | [`W4A4_HADAMARD_LOWRANK`] | 4 |
 
-\* **Hadamard Transform:** Applies a randomized Fast Walsh-Hadamard Transform to smooth out activation outliers before quantization (see [2404.00456](https://arxiv.org/abs/2404.00456)).
+\* **Hadamard Transform:** Applies a randomized Fast Walsh-Hadamard Transform to smooth out activation outliers before quantization (see [QuaRot](https://arxiv.org/abs/2404.00456)).</br>
+\*\* **Low-Rank Approximation:** Decomposes the per-element scale matrix into a rank-1 factorization to preserve GEMM compatibility and achieve fine-grained accuracy with near-zero overhead (see [LRSR](https://doi.org/10.5281/zenodo.22976487)).
 
 ## FAQ
 
